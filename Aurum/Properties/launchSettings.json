@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Aurum": {
+      "commandName": "Project",
+      "commandLineArgs": "node 8 2418"
+    }
+  }
+}
