@@ -71,7 +71,6 @@ namespace Aurum
         {
             var sessionPort = 24816; //Rand.Next(8192, 32768);
             bool success = false;
-            var router = new AurumNodeRouter(nodeSocket);
             ComHelper.Log($"Client connected");
             
 
@@ -87,18 +86,10 @@ namespace Aurum
                 ComHelper.Err($"Port {sessionPort} isn't available");
             }
 
-            if(success)
+            while(success)
             {
-                Task.Run(() =>
-                {
-                    router.Route();
-                });
-                while (true)
-                {
-                    router.AddChannel(listener.AcceptSocket());
-                    ComHelper.Log("Connection created");
-                }
-
+                var router = new AurumRoute(nodeSocket, listener.AcceptSocket(), 6);
+                router.Route();
             }
         }
     }

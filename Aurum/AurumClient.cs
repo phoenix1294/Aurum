@@ -1,4 +1,6 @@
 ﻿using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Aurum
 {
@@ -21,8 +23,27 @@ namespace Aurum
         {
             var nodeSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             nodeSocket.Connect(NodeHost, NodePort); // Connection to Aurum Node
+
+            var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            clientSocket.Connect(MappingHost, MappingPort); // Connection to ClientSide
+
+            Task.Run(() =>
+            {
+                while(true)
+                {
+                    if(!nodeSocket.Connected)
+                    {
+                        nodeSocket.Connect(NodeHost, NodePort); // Connection to Aurum Node
+                    }
+                    else
+                    {
+                        Thread.Sleep(50);
+                    }
+                }
+            });
+
             ComHelper.Succ("All successfully connected");
-            var router = new AurumRouter(nodeSocket, MappingHost, MappingPort);
+            var router = new AurumRoute(nodeSocket, clientSocket, 6);
             router.Route();
         }
     }
