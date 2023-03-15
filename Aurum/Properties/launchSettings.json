@@ -2,7 +2,7 @@
   "profiles": {
     "Aurum": {
       "commandName": "Project",
-      "commandLineArgs": "node 8 2418"
+      "commandLineArgs": "server 2418"
     }
   }
 }

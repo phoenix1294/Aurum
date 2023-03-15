@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Aurum
 {
@@ -14,45 +11,30 @@ namespace Aurum
 
         static void Main(string[] args)
         {
-            Console.Title = "Aurum Project by phoenix1294";
+            Console.Title = "Aurum by phoenix1294";
 
             if(args.Length == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 PrintL("Без аргументов работать не будет!");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                PrintL("Краткий ликбез:");
-                PrintL("      1. Нужно открыть CMD или PS (по вкусу) где лежит сборка");
-                PrintL("      2. И написать что-то вроде 'au rofelsoft.ru 80'");
-                PrintL("      'rofelsoft.ru' -> адрес нужного Aurum узла (может быть любым)");
-                PrintL("      '80' -> порт, который необходимо открыть (0-65536)");
-                PrintL("");
-                PrintL("      Можно стать узлом, но необходимы следующие условия:");
-                PrintL("      Открытые порты и белый IP, иначе работа не гарантируется");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                PrintL("      Для этого делаем пункт 1 и пишем 'au node 8'");
-                PrintL("      '8' -> максимальное количество клиентских узлов (0-255)");
-
-                Console.ForegroundColor = ConsoleColor.Red;
-                PrintL("      МОЖНО ОТКРЫТЬ УЗЕЛ ЧЕРЕЗ ЧУЖОЙ УЗЕЛ");
             }
             else
             {
-                if(args[0] == "node")
+                if(args[0] == "server")
                 {
-                    AurumNode aurumNode = new AurumNode(byte.Parse(args[1]), ushort.Parse(args[2]));
+                    AurumServer aurumNode = new AurumServer(ushort.Parse(args[1]));
                     aurumNode.Run();
                 }
-                else
+                if(args[0] == "client")
                 {
-                    AurumClient aurumClient = new AurumClient(args[0], ushort.Parse(args[1]));
+                    AurumClient aurumClient = new AurumClient(args[1], ushort.Parse(args[2]));
                     aurumClient.Run();
                 }
+                PrintL("Unknown command");
             }
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine();
-            Console.Write("Клацни любую клавишу чтобы закрыть");
+            Console.Write("\nPress key to exit...");
             Console.ReadKey(true);
         }
     }

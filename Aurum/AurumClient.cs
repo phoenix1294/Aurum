@@ -1,4 +1,6 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,41 +12,56 @@ namespace Aurum
         private string MappingHost;
         private ushort NodePort;
         private string NodeHost;
+        private int Channel;
 
         public AurumClient(string host, ushort port)
         {
             MappingPort = port;
             NodeHost = host;
-            MappingHost = "127.0.0.1";
-            NodePort = 2418;
+            MappingHost = "127.0.0.1"; // HARDCODE
+            NodePort = 2418; // HARDCODE!
         }
 
         public void Run()
         {
-            var nodeSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            nodeSocket.Connect(NodeHost, NodePort); // Connection to Aurum Node
+            var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            serverSocket.Connect(NodeHost, NodePort); // Connection to Aurum Server
 
-            var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            clientSocket.Connect(MappingHost, MappingPort); // Connection to ClientSide
+            AurumProto.SendPackage(new AurumPackage(ReservedChannels.Handshake, Encoding.UTF8.GetBytes("sodium")), serverSocket);
+            var handshake = AurumProto.ReceivePackage(serverSocket);
 
-            Task.Run(() =>
+            if (handshake.Channel == (int)ReservedChannels.ChannelDefine)
             {
-                while(true)
-                {
-                    if(!nodeSocket.Connected)
-                    {
-                        nodeSocket.Connect(NodeHost, NodePort); // Connection to Aurum Node
-                    }
-                    else
-                    {
-                        Thread.Sleep(50);
-                    }
-                }
-            });
+                Channel = BitConverter.ToInt32(handshake.GetData());
+                ComHelper.Succ($"Channel {Channel} allocated!");
+                
+                var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                clientSocket.Connect(MappingHost, MappingPort); // Connection to ClientSide
 
-            ComHelper.Succ("All successfully connected");
-            var router = new AurumRoute(nodeSocket, clientSocket, 6);
-            router.Route();
+                Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        if (!serverSocket.Connected)
+                        {
+                            serverSocket.Connect(NodeHost, NodePort); // Connection to Aurum Node
+                        }
+                        else
+                        {
+                            Thread.Sleep(50);
+                        }
+                    }
+                });
+
+                ComHelper.Succ("All successfully connected");
+                var router = new AurumRoute(serverSocket, clientSocket, 6);
+                router.Route();
+            }
+            else
+            {
+                ComHelper.Err("Handshake is broken");
+            }
+            
         }
     }
 }
